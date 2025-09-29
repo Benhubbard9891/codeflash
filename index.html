@@ -30,11 +30,29 @@
     }
     </script>
     
-    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <meta name="google-site-verification" content="t89dpgEBX4PsQAw3KUnNfWAnj7D6SjHui_aPvFGPvYY" />
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <!-- Hamburger Menu -->
+    <div class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </div>
+    
+    <div class="side-drawer" id="sideDrawer">
+        <div class="drawer-links">
+            <a href="#features" class="drawer-link"><i class="fas fa-star"></i> Features</a>
+            <a href="#testimonials" class="drawer-link"><i class="fas fa-comment"></i> Testimonials</a>
+            <a href="#screenshots" class="drawer-link"><i class="fas fa-image"></i> Screenshots</a>
+            <a href="#download" class="drawer-link"><i class="fas fa-download"></i> Download</a>
+            <!--<a href="#" class="drawer-link"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+            <a href="#" class="drawer-link"><i class="fas fa-file-contract"></i> Terms of Service</a>-->
+            <a href="mailto:alonewolfsupp@gmail.com" class="drawer-link" target="_blank"><i class="fas fa-envelope"></i> Contact Us</a>
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay"></div>
+    
     <header>
         <div class="header-code"></div>
         <div class="header-content">
@@ -44,7 +62,7 @@
         </div>
     </header>
     
-    <section class="features">
+    <section class="features" id="features">
         <h2 class="section-title">Key Features</h2>
         <div class="features-grid">
             <div class="feature-card">
@@ -75,17 +93,17 @@
             <div class="feature-card">
                 <div class="feature-icon"><i class="fas fa-terminal"></i></div>
                 <h3 class="feature-title">Run</h3>
-                <p class="feature-desc">Quickly run and preview outputs of HTML/CSS, JS, Python, JSON, Markdown, and more file types.</p>
+                <p class="feature-desc">Quickly run and preview outputs of Html/Css (Web), Python, TypeScript, Ruby, JavaScript, Markdown, JSON, SVG and more file types.</p>
             </div>
         </div>
     </section>
     
-    <section class="testimonials">
+    <section class="testimonials" id="testimonials">
         <div class="testimonials-container">
             <h2 class="section-title">What Our Users Say</h2>
             <div class="testimonial-grid">
                 <div class="testimonial-card">
-                    <p class="testimonial-text">“I've been searching for a reliable mobile editor to run HTML, CSS, JS (WEB) for a long time. Codeflash really delivers a near desktop-level experience. The theme options and project management features are incredibly well-thought-out.”</p>
+                    <p class="testimonial-text">"I've been searching for a reliable mobile editor to run HTML, CSS, JS (WEB) for a long time. Codeflash really delivers a near desktop-level experience. The theme options and project management features are incredibly well-thought-out."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">JD</div>
                         <div class="author-info">
@@ -95,7 +113,7 @@
                     </div>
                 </div>
                 <div class="testimonial-card">
-                    <p class="testimonial-text">“I'm new to coding and don’t have a PC, but with this app I can code anywhere. Even my teacher was surprised when I showed my project built entirely on my phone :)”</p>
+                    <p class="testimonial-text">"I'm new to coding and don't have a PC, but with this app I can code anywhere. Even my teacher was surprised when I showed my project built entirely on my phone :)"</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">SM</div>
                         <div class="author-info">
@@ -105,7 +123,7 @@
                     </div>
                 </div>
                 <div class="testimonial-card">
-                    <p class="testimonial-text">“I started using it instantly, no setup required. The lack of ads and clean interface lets me jump straight into coding without distractions. I can’t believe this is still free.”</p>
+                    <p class="testimonial-text">"I started using it instantly, no setup required. The lack of ads and clean interface lets me jump straight into coding without distractions. I can't believe this is still free."</p>
                     <div class="testimonial-author">
                         <div class="author-avatar">AR</div>
                         <div class="author-info">
@@ -126,7 +144,7 @@
                     <div class="code-dot dot-yellow"></div>
                     <div class="code-dot dot-green"></div>
                 </div>
-                <div class="code-title">example.js</div>
+                <div class="code-title">main.js</div>
             </div>
             <div class="code-content">
                 <span class="code-line"><span class="code-keyword">function</span> <span class="code-function">calculateSum</span>(a, b) {</span>
@@ -144,17 +162,46 @@
         </div>
     </section>
     
-    <section class="screenshots">
+    <section class="screenshots" id="screenshots">
         <h2 class="section-title">App Screenshots</h2>
-        <div class="screenshots-slider">
-            <div class="screenshot" style="background-image: url('img/0.png')"></div>
-            <div class="screenshot" style="background-image: url('img/1.png')"></div>
-            <div class="screenshot" style="background-image: url('img/2.png')"></div>
-            <div class="screenshot" style="background-image: url('img/3.png')"></div>
-            <div class="screenshot" style="background-image: url('img/4.png')"></div>
-            <div class="screenshot" style="background-image: url('img/5.png')"></div>
+        <div class="screenshots-container">
+            <div class="screenshots-slider" id="screenshotsSlider">
+                <div class="video-container">
+                    <div class="video-placeholder" id="videoTrigger">
+                        <i class="fab fa-youtube"></i>
+                    </div>
+                </div>
+                <div class="screenshot" data-src="img/0.png" style="background-image: url('img/0.png')"></div>
+                <div class="screenshot" data-src="img/1.png" style="background-image: url('img/1.png')"></div>
+                <div class="screenshot" data-src="img/2.png" style="background-image: url('img/2.png')"></div>
+                <div class="screenshot" data-src="img/3.png" style="background-image: url('img/3.png')"></div>
+                <div class="screenshot" data-src="img/4.png" style="background-image: url('img/4.png')"></div>
+                <div class="screenshot" data-src="img/5.png" style="background-image: url('img/5.png')"></div>
+            </div>
+            <div class="slider-controls">
+                <button class="slider-btn" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+                <button class="slider-btn" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+            </div>
         </div>
     </section>
+    
+    <!-- Video Modal -->
+    <div class="video-modal" id="videoModal">
+        <div class="modal-content">
+            <span class="close-modal" id="closeModal"><i class="fas fa-times"></i></span>
+            <div class="video-wrapper">
+                <iframe id="youtubeVideo" width="560" height="315" src="" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Screenshot Modal -->
+    <div class="screenshot-modal" id="screenshotModal">
+        <div class="screenshot-modal-content">
+            <span class="close-screenshot-modal" id="closeScreenshotModal"><i class="fas fa-times"></i></span>
+            <img class="screenshot-modal-img" id="screenshotModalImg" src="" alt="App Screenshot">
+        </div>
+    </div>
     
     <section class="download" id="download">
         <h2 class="download-title">Download Codeflash Now</h2>
@@ -182,6 +229,7 @@
             <!--<a href="mailto:alonewolfsupp@gmail.com" class="social-link"><i class="fa-solid fa-envelope" target="_blank" ></i></a>-->
             <a href="https://play.google.com/store/apps/dev?id=9039357552128419825" class="social-link" target="_blank" ><i class="fab fa-google-play"></i></a>
             <a href="https://github.com/ferhatgnlts" class="social-link" target="_blank" ><i class="fab fa-github"></i></a>
+            <a href="https://whatsapp.com/channel/0029Vb4p62OCBtx66sfy0j1o" class="social-link" target="_blank" ><i class="fab fa-whatsapp"></i></a>
             <a href="https://m.youtube.com/@AloneWolfOfficial" class="social-link"><i class="fab fa-youtube" target="_blank" ></i></a>
         </div>
         <p class="copyright">© 2023~2025 Codeflash. All rights reserved.</p>
