@@ -1,0 +1,5 @@
+click>=8.0.0
+PyGithub>=1.55
+openai>=1.0.0
+ast-grep-py>=0.5.0
+gitpython>=3.1.0
