@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Logs and audit files
+supervisor-audit.jsonl
+
+# Temporary files
+*.tmp
+.DS_Store
