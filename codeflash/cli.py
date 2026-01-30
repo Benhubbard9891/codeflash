@@ -87,10 +87,14 @@ def optimize(path, goal, create_pr, repo, token, dry_run):
         return
     
     # Apply optimizations
-    if click.confirm("\n🔧 Apply these optimizations?", default=True):
+    if click.confirm("\n🔧 Apply these optimizations?", default=False):
         click.echo("\n⚙️  Applying optimizations...")
         applied = analyzer.apply_optimizations(results)
-        click.echo(f"✅ Applied {applied} optimizations")
+        if applied == 0:
+            click.echo("ℹ️  Note: Automatic code modification is not yet implemented.")
+            click.echo("   Please review the suggestions above and apply them manually.")
+        else:
+            click.echo(f"✅ Applied {applied} optimizations")
         
         # Create PR if requested
         if create_pr:

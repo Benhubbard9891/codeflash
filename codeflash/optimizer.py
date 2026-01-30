@@ -46,8 +46,11 @@ class CodeOptimizer:
             elif self.goal == 'memory':
                 self._check_memory_optimizations(tree, file_path)
             
-        except (SyntaxError, Exception):
-            # Skip files that can't be analyzed
+        except SyntaxError:
+            # Skip files with syntax errors
+            pass
+        except (UnicodeDecodeError, IOError):
+            # Skip files that can't be read
             pass
     
     def _check_speed_optimizations(self, tree: ast.AST, file_path: Path):

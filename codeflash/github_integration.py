@@ -18,15 +18,34 @@ class GitHubPRGenerator:
         
         Args:
             repo_name: Repository in format "owner/repo"
-            token: GitHub personal access token
+            token: GitHub personal access token (requires 'repo' scope)
+        
+        Raises:
+            ValueError: If repo_name is not in correct format
         """
+        if '/' not in repo_name or repo_name.count('/') != 1:
+            raise ValueError(
+                f"Invalid repository name '{repo_name}'. "
+                "Expected format: 'owner/repo'"
+            )
+        
         self.repo_name = repo_name
-        self.github = Github(token)
-        self.repo = self.github.get_repo(repo_name)
+        try:
+            self.github = Github(token)
+            self.repo = self.github.get_repo(repo_name)
+        except Exception as e:
+            raise ValueError(
+                f"Failed to access repository '{repo_name}'. "
+                f"Ensure the token has 'repo' scope and repository exists. Error: {e}"
+            )
     
     def create_pr(self, results: List[Dict], goal: str) -> str:
         """
-        Create a pull request with optimization changes.
+        Create a pull request with optimization suggestions.
+        
+        Note: Currently creates a PR with optimization recommendations
+        in the description. Actual code changes will be implemented in
+        a future version.
         
         Args:
             results: List of optimization results
@@ -34,34 +53,48 @@ class GitHubPRGenerator:
             
         Returns:
             URL of the created pull request
+            
+        Raises:
+            Exception: If PR creation fails
         """
-        # Create a new branch
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        branch_name = f"codeflash/{goal}-optimization-{timestamp}"
-        
-        # Get the default branch
-        default_branch = self.repo.default_branch
-        base_ref = self.repo.get_git_ref(f"heads/{default_branch}")
-        
-        # Create new branch
-        self.repo.create_git_ref(
-            ref=f"refs/heads/{branch_name}",
-            sha=base_ref.object.sha
-        )
-        
-        # Generate PR title and description
-        title = self._generate_pr_title(goal, len(results))
-        description = self._generate_pr_description(results, goal)
-        
-        # Create pull request
-        pr = self.repo.create_pull(
-            title=title,
-            body=description,
-            head=branch_name,
-            base=default_branch
-        )
-        
-        return pr.html_url
+        try:
+            # Create a new branch
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            branch_name = f"codeflash/{goal}-optimization-{timestamp}"
+            
+            # Get the default branch
+            default_branch = self.repo.default_branch
+            base_ref = self.repo.get_git_ref(f"heads/{default_branch}")
+            
+            # Create new branch
+            self.repo.create_git_ref(
+                ref=f"refs/heads/{branch_name}",
+                sha=base_ref.object.sha
+            )
+            
+            # TODO: Commit actual code changes to the branch
+            # Currently creates a PR with recommendations only
+            
+            # Generate PR title and description
+            title = self._generate_pr_title(goal, len(results))
+            description = self._generate_pr_description(results, goal)
+            description += "\n\n---\n**Note:** This PR currently contains recommendations only. "
+            description += "Automatic code changes will be implemented in a future version."
+            
+            # Create pull request
+            pr = self.repo.create_pull(
+                title=title,
+                body=description,
+                head=branch_name,
+                base=default_branch
+            )
+            
+            return pr.html_url
+        except Exception as e:
+            raise Exception(
+                f"Failed to create pull request: {e}. "
+                "Ensure your GitHub token has 'repo' scope and you have write access."
+            )
     
     def _generate_pr_title(self, goal: str, count: int) -> str:
         """Generate a descriptive PR title."""

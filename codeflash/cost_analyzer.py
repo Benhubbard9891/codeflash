@@ -20,33 +20,33 @@ class CostAnalyzer:
     - Resource allocation patterns
     """
     
+    # Heavy libraries that could have lighter alternatives
+    HEAVY_LIBRARIES = {
+        'pandas': {
+            'weight': 'heavy',
+            'alternatives': ['csv (stdlib)', 'polars (lighter & faster)'],
+            'use_cases': {
+                'read_csv': 'For simple CSV reading, use csv.DictReader from stdlib',
+                'DataFrame': 'For large datasets, consider polars or Apache Arrow',
+            }
+        },
+        'numpy': {
+            'weight': 'medium',
+            'alternatives': ['array (stdlib) for simple arrays'],
+            'use_cases': {
+                'array': 'For simple arrays without complex operations',
+            }
+        },
+        'requests': {
+            'weight': 'medium',
+            'alternatives': ['urllib (stdlib) for simple HTTP requests'],
+            'use_cases': {}
+        },
+    }
+    
     def __init__(self, path: str):
         self.path = Path(path)
         self.results = []
-        
-        # Heavy libraries that could have lighter alternatives
-        self.heavy_libraries = {
-            'pandas': {
-                'weight': 'heavy',
-                'alternatives': ['csv (stdlib)', 'polars (lighter & faster)'],
-                'use_cases': {
-                    'read_csv': 'For simple CSV reading, use csv.DictReader from stdlib',
-                    'DataFrame': 'For large datasets, consider polars or Apache Arrow',
-                }
-            },
-            'numpy': {
-                'weight': 'medium',
-                'alternatives': ['array (stdlib) for simple arrays'],
-                'use_cases': {
-                    'array': 'For simple arrays without complex operations',
-                }
-            },
-            'requests': {
-                'weight': 'medium',
-                'alternatives': ['urllib (stdlib) for simple HTTP requests'],
-                'use_cases': {}
-            },
-        }
     
     def analyze(self) -> List[Dict]:
         """
@@ -74,11 +74,11 @@ class CostAnalyzer:
             self._check_data_structures(tree, file_path)
             self._check_memory_patterns(tree, file_path)
             
-        except SyntaxError as e:
+        except SyntaxError:
             # Skip files with syntax errors
             pass
-        except Exception as e:
-            # Skip files that can't be analyzed
+        except (UnicodeDecodeError, IOError):
+            # Skip files that can't be read
             pass
     
     def _check_imports(self, tree: ast.AST, file_path: Path):
@@ -97,8 +97,8 @@ class CostAnalyzer:
         # Check if this is a heavy library
         base_lib = lib_name.split('.')[0]
         
-        if base_lib in self.heavy_libraries:
-            lib_info = self.heavy_libraries[base_lib]
+        if base_lib in self.HEAVY_LIBRARIES:
+            lib_info = self.HEAVY_LIBRARIES[base_lib]
             alternatives = ', '.join(lib_info['alternatives'])
             
             self.results.append({
@@ -116,7 +116,9 @@ class CostAnalyzer:
         for node in ast.walk(tree):
             # Check for list comprehensions that could be generators
             if isinstance(node, ast.ListComp):
-                # Check if the list is only used for iteration
+                # Note: This is a heuristic - only suggests generators for large iterations
+                # In practice, list comprehensions are fine for small datasets or when
+                # the list is needed for multiple iterations or indexing
                 self.results.append({
                     'file': str(file_path),
                     'line': node.lineno,
@@ -125,30 +127,23 @@ class CostAnalyzer:
                     'suggestion': 'Use generator expression () instead of [] if only iterating once',
                     'type': 'data_structure',
                 })
-            
-            # Check for inefficient membership testing
-            if isinstance(node, ast.Compare):
-                for op in node.ops:
-                    if isinstance(op, ast.In):
-                        # This could be checking list membership which is O(n)
-                        # Could suggest using set for O(1) lookups
-                        pass
     
     def _check_memory_patterns(self, tree: ast.AST, file_path: Path):
         """Check for memory-intensive patterns."""
         for node in ast.walk(tree):
-            # Check for large string concatenations in loops
+            # Check for augmented assignments (+=) in loops
             if isinstance(node, ast.For):
                 for child in ast.walk(node):
                     if isinstance(child, ast.AugAssign):
                         if isinstance(child.op, ast.Add):
-                            # Could be string concatenation in a loop
+                            # Potential string concatenation or list concatenation in a loop
+                            # Both can be inefficient - strings create new objects, lists copy data
                             self.results.append({
                                 'file': str(file_path),
                                 'line': child.lineno,
-                                'issue': 'Potential string concatenation in loop',
-                                'impact': 'Creates new string objects each iteration (O(n²) memory)',
-                                'suggestion': 'Use list.append() and "".join() for better memory efficiency',
+                                'issue': 'Augmented assignment (+= operator) in loop',
+                                'impact': 'May create new objects each iteration if used with strings (O(n²) memory)',
+                                'suggestion': 'If concatenating strings: use list.append() and "".join(). If adding numbers: this is fine.',
                                 'type': 'memory_pattern',
                             })
     
@@ -156,47 +151,17 @@ class CostAnalyzer:
         """
         Apply the suggested optimizations to the code.
         
+        Note: This is currently a placeholder implementation.
+        In production, this would use AST transformation to safely
+        apply code modifications.
+        
         Args:
             results: List of optimization suggestions
             
         Returns:
-            Number of optimizations applied
+            Number of optimizations that would be applied (placeholder)
         """
-        applied = 0
-        
-        # Group results by file
-        files_to_optimize = {}
-        for result in results:
-            file_path = result['file']
-            if file_path not in files_to_optimize:
-                files_to_optimize[file_path] = []
-            files_to_optimize[file_path].append(result)
-        
-        # Apply optimizations file by file
-        for file_path, file_results in files_to_optimize.items():
-            # Read the file
-            with open(file_path, 'r', encoding='utf-8') as f:
-                lines = f.readlines()
-            
-            # Sort results by line number in reverse to avoid line number shifts
-            file_results.sort(key=lambda x: x['line'], reverse=True)
-            
-            # Apply optimizations
-            for result in file_results:
-                if result['type'] == 'data_structure':
-                    # Example: Convert list comprehension to generator
-                    line_idx = result['line'] - 1
-                    if line_idx < len(lines):
-                        line = lines[line_idx]
-                        # Simple replacement of [] with ()
-                        if '[' in line and ']' in line:
-                            # This is a simplified version - real implementation would use AST
-                            # For now, we'll just mark as applied without changing
-                            applied += 1
-            
-            # Write back (for now, we're not actually modifying to keep it safe)
-            # In production, we would write the modified lines back
-            # with open(file_path, 'w', encoding='utf-8') as f:
-            #     f.writelines(lines)
-        
-        return applied
+        # TODO: Implement actual code transformations using AST
+        # For now, this is a placeholder that doesn't modify files
+        # to avoid breaking user code
+        return 0  # Indicate no actual changes were made

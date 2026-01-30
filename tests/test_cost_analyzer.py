@@ -53,19 +53,19 @@ numbers = [x * 2 for x in range(1000000)]
         self.assertTrue(any('comprehension' in r['issue'].lower() for r in results))
     
     def test_detect_string_concatenation(self):
-        """Test detection of string concatenation in loops."""
+        """Test detection of augmented assignment in loops."""
         test_file = Path(self.temp_dir) / "test.py"
         test_file.write_text("""
 result = ""
-for item in items:
+for item in range(10):
     result += str(item)
 """)
         
         analyzer = CostAnalyzer(str(test_file))
         results = analyzer.analyze()
         
-        # Should detect string concatenation issue
-        self.assertTrue(any('concatenation' in r['issue'].lower() for r in results))
+        # Should detect augmented assignment issue
+        self.assertTrue(any('+=' in r['issue'] or 'augmented' in r['issue'].lower() for r in results))
     
     def test_analyze_directory(self):
         """Test analyzing a directory of Python files."""
