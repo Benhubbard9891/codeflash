@@ -33,6 +33,12 @@ Get CodeFlash on Google Play:
 - **Icons**: Font Awesome
 - **Hosting**: GitHub Pages
 
+## Additional Tools 🔧
+
+This repository also includes:
+
+- **[Supervisor CLI](SUPERVISOR_README.md)**: A policy-enforced LLM orchestrator for managing AI-powered workflows with built-in safety and audit features.
+
 ## Contributing 🤝
 
 Contributions are welcome! If you'd like to improve the website:
