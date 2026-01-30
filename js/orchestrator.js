@@ -181,7 +181,9 @@ export function compileGraph(definition) {
         nodeId => !edges.some(e => e.from === nodeId)
       );
       
-      const finalOutputs = outputNodes.map(nodeId => nodeOutputs.get(nodeId));
+      const finalOutputs = outputNodes
+        .map(nodeId => nodeOutputs.get(nodeId))
+        .filter(Boolean); // Filter out undefined values
 
       return {
         success: true,

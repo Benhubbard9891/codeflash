@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Supervisor CLI v1.2 - Policy-Enforced LLM Orchestrator
- * npm i commander ajv chalk fs path
+ * npm i commander ajv chalk
  */
 
 import { Command } from 'commander';
@@ -29,7 +29,7 @@ const defaultPolicies = {
   safety: (output) => !/dangerous|illegal|violate/i.test(JSON.stringify(output)),
   schema: (output, roleId) => ajv.compile(roleRegistry[roleId]?.schema || {})(output),
   length: (output) => JSON.stringify(output).length < 50000,
-  novelty: (output) => output.novelty_score > 0.3 || true,
+  novelty: (output) => output?.novelty_score > 0.3,
   audit: async (trace, appliedPolicies = {}) => {
     await fs.appendFile(auditLog, JSON.stringify({
       timestamp: new Date().toISOString(),
@@ -43,16 +43,23 @@ const defaultPolicies = {
 // Policy enforcement middleware
 async function enforcePolicies(trace, policies = defaultPolicies, options = {}) {
   const violations = [];
+  
+  // Run audit policy once for the entire trace
+  if (policies.audit) {
+    await policies.audit(trace, policies);
+  }
+  
+  // Check other policies for each step
   for (const [name, policy] of Object.entries(policies)) {
+    if (name === 'audit') continue; // Skip audit, already handled
+    
     for (const step of trace) {
-      // Handle audit policy specially to pass the policies list
-      if (name === 'audit') {
-        await policy(trace, policies);
-      } else if (!await policy(step.result?.data, step.role, options)) {
+      if (!await policy(step.result?.data, step.role, options)) {
         violations.push({ policy: name, role: step.role, data: step.result?.data });
       }
     }
   }
+  
   if (violations.length > 0) {
     console.log(chalk.yellow('⚠ Policy violations:'), violations.length);
     return { success: false, violations };
@@ -66,7 +73,7 @@ program
   .description('Execute linear role chain')
   .option('--provider <name>', 'openai|anthropic|mock', 'mock')
   .option('--api-key <key>', 'API key for paid providers')
-  .option('--policy <policies>', 'safety,schema,length,novelty,audit', 'safety,schema,audit')
+  .option('--policy <policies>', 'Comma-separated policies: safety,schema,length,novelty,audit', 'safety,schema,audit')
   .option('--output <file>', 'Save result to file')
   .option('--strict', 'Fail on any policy violation', false)
   .action(async (sequence, payloadStr, cmd) => {
@@ -87,7 +94,7 @@ program
       const activePolicies = {};
       cmd.policy.split(',').forEach(p => activePolicies[p] = defaultPolicies[p]);
       
-      const policyResult = await enforcePolicies(result.trace, activePolicies, { strict: cmd.strict });
+      const policyResult = await enforcePolicies(result.trace, activePolicies);
       
       const output = {
         metadata: { duration, roles: roles.length, policies: Object.keys(activePolicies), provider: cmd.provider },
@@ -114,17 +121,18 @@ program
   });
 
 program
-  .command('dag <def>')
+  .command('dag <def> <payload>')
   .description('Execute DAG (JSON graph def)')
-  .option('--provider <name>', 'mock', 'mock')
-  .option('--policy <policies>', 'safety,schema,audit', 'safety,schema,audit')
-  .action(async (defStr, cmd) => {
+  .option('--provider <name>', 'Provider name', 'mock')
+  .option('--policy <policies>', 'Comma-separated policies: safety,schema,length,novelty,audit', 'safety,schema,audit')
+  .action(async (defStr, payloadStr, cmd) => {
     try {
       const def = JSON.parse(defStr);
+      const payload = JSON.parse(payloadStr);
       registerProvider('default', providers[cmd.provider]());
       
       const graph = compileGraph(def);
-      const result = await graph.execute({ idea: 'DAG test' });
+      const result = await graph.execute(payload);
       
       const policies = {};
       (cmd.policy || 'safety,schema,audit').split(',').forEach(p => policies[p] = defaultPolicies[p]);
